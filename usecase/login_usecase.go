@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/internal/tokenutil"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
+	"github.com/janghanul090801/spine-clean-architecture/internal/tokenutil"
 	"time"
 )
 

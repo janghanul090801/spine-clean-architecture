@@ -1,15 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/controller"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/route"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/bootstrap"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/repository"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/usecase"
-	"log"
-	"net/http"
+	"github.com/NARUBROWN/spine/pkg/boot"
+	"github.com/janghanul090801/spine-clean-architecture/api/controller"
+	"github.com/janghanul090801/spine-clean-architecture/api/route"
+	"github.com/janghanul090801/spine-clean-architecture/bootstrap"
+	"github.com/janghanul090801/spine-clean-architecture/config"
+	"github.com/janghanul090801/spine-clean-architecture/infra/model"
+	"github.com/janghanul090801/spine-clean-architecture/infra/repository"
+	"github.com/janghanul090801/spine-clean-architecture/interceptor"
+	"github.com/janghanul090801/spine-clean-architecture/internal/logger"
+	"github.com/janghanul090801/spine-clean-architecture/usecase"
+	"github.com/uptrace/bun"
+	"go.uber.org/zap"
+	"os"
 	"time"
 )
 
@@ -17,51 +21,71 @@ func main() {
 
 	app := bootstrap.App()
 
-	env := app.Env
+	db := app.DB
 
-	api := app.App.Group("/api")
-
-	client := app.Client
 	defer app.CloseDBConnection()
 
-	timeout := time.Duration(env.ContextTimeout) * time.Second
+	getLogger := logger.GetLogger()
+	getLogger.Info("Starting Spine Server")
 
-	// repository
-	userRepository := repository.NewUserRepository(client)
-	taskRepository := repository.NewTaskRepository(client)
+	db.RegisterModel(
+		(*model.UserModel)(nil),
+		(*model.TaskModel)(nil),
+	)
 
-	// usecase
-	loginUsecase := usecase.NewLoginUsecase(userRepository, timeout)
-	profileUsecase := usecase.NewProfileUsecase(userRepository, timeout)
-	refreshTokenUsecase := usecase.NewRefreshTokenUsecase(userRepository, timeout)
-	signupUsecase := usecase.NewSignupUsecase(userRepository, timeout)
-	taskUsecase := usecase.NewTaskUsecase(taskRepository, timeout)
+	app.App.Constructor(
+		// DB
+		func() *bun.DB { return db },
 
-	// controller
-	loginController := controller.NewLoginController(loginUsecase, env)
-	profileController := controller.NewProfileController(profileUsecase)
-	refreshTokenController := controller.NewRefreshTokenController(refreshTokenUsecase, env)
-	signupController := controller.NewSignupController(signupUsecase, env)
-	taskController := controller.NewTaskController(taskUsecase, env)
+		// etc.
+		func() *zap.Logger { return getLogger },
+		func() time.Duration { return time.Duration(config.E.ContextTimeout) * time.Second },
 
-	// router
-	route.NewLoginRouter(api.Group("/login"), loginController)
-	route.NewProfileRouter(api.Group("/profile"), profileController)
-	route.NewRefreshTokenRouter(api.Group("/refresh"), refreshTokenController)
-	route.NewSignupRouter(api.Group("/signup"), signupController)
-	route.NewTaskRouter(api.Group("/task"), taskController)
+		// Repository
+		repository.NewUserRepository,
+		repository.NewTaskRepository,
 
-	app.App.All("*", func(c *fiber.Ctx) error {
-		notFoundErr := fmt.Errorf(
-			"route '%s' does not exist in this API",
-			c.OriginalURL(),
-		)
+		// Usecase
+		usecase.NewTaskUsecase,
+		usecase.NewSignupUsecase,
+		usecase.NewLoginUsecase,
+		usecase.NewProfileUsecase,
+		usecase.NewRefreshTokenUsecase,
 
-		return c.Status(http.StatusNotFound).JSON(&fiber.Map{
-			"status": "error",
-			"error":  notFoundErr.Error(),
-		})
+		// Controller
+		controller.NewTaskController,
+		controller.NewProfileController,
+		controller.NewSignupController,
+		controller.NewLoginController,
+		controller.NewRefreshTokenController,
+
+		// Interceptor
+		interceptor.NewTxInterceptor,
+		interceptor.NewAuthInterceptor,
+	)
+
+	app.App.Interceptor(
+		interceptor.NewCORSInterceptor(),
+		interceptor.NewRateLimitInterceptor(),
+		// interceptor.NewLoggingInterceptor(),
+		interceptor.NewErrorInterceptor(),
+	)
+
+	route.NewLoginRouter(app.App)
+	route.NewSignupRouter(app.App)
+	route.NewProfileRouter(app.App)
+	route.NewRefreshTokenRouter(app.App)
+	route.NewTaskRouter(app.App)
+
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	getLogger.Info("Server starting", zap.String("port", port))
+	app.App.Run(boot.Options{
+		Address:                ":" + port,
+		EnableGracefulShutdown: true,
+		HTTP:                   &boot.HTTPOptions{},
 	})
-
-	log.Fatal(app.App.Listen(env.ServerAddress))
 }

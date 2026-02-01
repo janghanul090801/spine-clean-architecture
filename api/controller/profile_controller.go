@@ -1,8 +1,10 @@
 package controller
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
+	"context"
+	"github.com/NARUBROWN/spine/pkg/httpx"
+	"github.com/NARUBROWN/spine/pkg/spine"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"net/http"
 )
 
@@ -16,14 +18,28 @@ func NewProfileController(usecase domain.ProfileUsecase) *ProfileController {
 	}
 }
 
-func (pc *ProfileController) Fetch(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := c.Locals("id").(domain.ID)
+func (pc *ProfileController) Fetch(ctx context.Context, spineCtx spine.Ctx) httpx.Response[domain.Profile] {
+	v, ok := spineCtx.Get("id")
+	if !ok {
+		return httpx.Response[domain.Profile]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusUnauthorized, // unauthorized
+			},
+		}
+	}
+
+	userID := v.(domain.ID)
 
 	profile, err := pc.profileUsecase.GetProfileByID(ctx, &userID)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		return httpx.Response[domain.Profile]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
-	return c.Status(http.StatusOK).JSON(profile)
+	return httpx.Response[domain.Profile]{
+		Body: *profile,
+	}
 }

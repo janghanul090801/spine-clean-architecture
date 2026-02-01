@@ -3,9 +3,9 @@ package usecase_test
 import (
 	"context"
 	"errors"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain/mocks"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/usecase"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
+	"github.com/janghanul090801/spine-clean-architecture/domain/mocks"
+	"github.com/janghanul090801/spine-clean-architecture/usecase"
 	"testing"
 	"time"
 

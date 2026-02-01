@@ -1,9 +1,11 @@
 package controller
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/bootstrap"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
+	"context"
+	"github.com/NARUBROWN/spine/pkg/httperr"
+	"github.com/NARUBROWN/spine/pkg/httpx"
+	"github.com/NARUBROWN/spine/pkg/spine"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"net/http"
 )
 
@@ -11,43 +13,67 @@ type TaskController struct {
 	taskUsecase domain.TaskUsecase
 }
 
-func NewTaskController(usecase domain.TaskUsecase, env *bootstrap.Env) *TaskController {
+func NewTaskController(usecase domain.TaskUsecase) *TaskController {
 	return &TaskController{
 		taskUsecase: usecase,
 	}
 }
 
-func (tc *TaskController) Create(c *fiber.Ctx) error {
-	ctx := c.Context()
-	var task domain.Task
+func (tc *TaskController) Create(ctx context.Context, task *domain.Task, spineCtx spine.Ctx) error {
 
-	err := c.BodyParser(&task)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(domain.ErrorResponse{Message: err.Error()})
+	v, ok := spineCtx.Get("id")
+	if !ok {
+		return httperr.Unauthorized("unauthorized")
 	}
 
-	userID := c.Locals("id").(domain.ID)
+	userID := v.(domain.ID)
 
 	task.UserID = userID
 
-	err = tc.taskUsecase.Create(ctx, &task)
+	err := tc.taskUsecase.Create(ctx, task)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		return &httperr.HTTPError{
+			Status:  http.StatusInternalServerError,
+			Message: err.Error(),
+			Cause:   err,
+		}
 	}
 
-	return c.Status(http.StatusOK).JSON(domain.SuccessResponse{
-		Message: "Task created successfully",
-	})
+	return nil
 }
 
-func (tc *TaskController) Fetch(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := c.Locals("id").(domain.ID)
+func (tc *TaskController) Fetch(ctx context.Context, spineCtx spine.Ctx) httpx.Response[[]domain.Task] {
+	v, ok := spineCtx.Get("id")
+	if !ok {
+		return httpx.Response[[]domain.Task]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusUnauthorized, // unauthorized
+			},
+		}
+	}
+
+	userID := v.(domain.ID)
 
 	tasks, err := tc.taskUsecase.FetchByUserID(ctx, &userID)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		return httpx.Response[[]domain.Task]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
-	return c.Status(http.StatusOK).JSON(tasks)
+	taskValues := make([]domain.Task, len(tasks))
+	for i, task := range tasks {
+		taskValues[i] = domain.Task{
+			ID:        task.ID,
+			Title:     task.Title,
+			UserID:    task.UserID,
+			CreatedAt: task.CreatedAt,
+		}
+	}
+
+	return httpx.Response[[]domain.Task]{
+		Body: taskValues,
+	}
 }

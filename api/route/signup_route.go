@@ -1,10 +1,10 @@
 package route
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/controller"
+	"github.com/NARUBROWN/spine"
+	"github.com/janghanul090801/spine-clean-architecture/api/controller"
 )
 
-func NewSignupRouter(group fiber.Router, controller *controller.SignupController) {
-	group.Post("/", controller.Signup)
+func NewSignupRouter(app spine.App) {
+	app.Route("POST", "/signup", (*controller.SignupController).Signup)
 }

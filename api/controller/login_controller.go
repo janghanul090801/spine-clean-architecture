@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/bootstrap"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
+	"context"
+	"github.com/NARUBROWN/spine/pkg/httpx"
+	"github.com/janghanul090801/spine-clean-architecture/config"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,42 +12,49 @@ import (
 
 type LoginController struct {
 	loginUsecase domain.LoginUsecase
-	env          *bootstrap.Env
 }
 
-func NewLoginController(usecase domain.LoginUsecase, env *bootstrap.Env) *LoginController {
+func NewLoginController(usecase domain.LoginUsecase) *LoginController {
 	return &LoginController{
 		loginUsecase: usecase,
 	}
 }
 
-func (lc *LoginController) Login(c *fiber.Ctx) error {
-	ctx := c.Context()
-
-	var request domain.LoginRequest
-
-	err := c.BodyParser(&request)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(domain.ErrorResponse{Message: err.Error()})
-	}
+func (lc *LoginController) Login(ctx context.Context, request *domain.LoginRequest) httpx.Response[domain.LoginResponse] {
 
 	user, err := lc.loginUsecase.GetUserByEmail(ctx, request.Email)
 	if err != nil {
-		return c.Status(http.StatusNotFound).JSON(domain.ErrorResponse{Message: "User not found with the given email"})
+		return httpx.Response[domain.LoginResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusNotFound, // User not found with the given email
+			},
+		}
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)) != nil {
-		return c.Status(http.StatusUnauthorized).JSON(domain.ErrorResponse{Message: "Invalid credentials"})
+		return httpx.Response[domain.LoginResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusUnauthorized, // Invalid credentials
+			},
+		}
 	}
 
-	accessToken, err := lc.loginUsecase.CreateAccessToken(user, lc.env.AccessTokenSecret, lc.env.AccessTokenExpiryHour)
+	accessToken, err := lc.loginUsecase.CreateAccessToken(user, config.E.AccessTokenSecret, config.E.AccessTokenExpiryHour)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		return httpx.Response[domain.LoginResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
-	refreshToken, err := lc.loginUsecase.CreateRefreshToken(user, lc.env.RefreshTokenSecret, lc.env.RefreshTokenExpiryHour)
+	refreshToken, err := lc.loginUsecase.CreateRefreshToken(user, config.E.RefreshTokenSecret, config.E.RefreshTokenExpiryHour)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		return httpx.Response[domain.LoginResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
 	loginResponse := domain.LoginResponse{
@@ -54,5 +62,7 @@ func (lc *LoginController) Login(c *fiber.Ctx) error {
 		RefreshToken: refreshToken,
 	}
 
-	return c.Status(http.StatusOK).JSON(loginResponse)
+	return httpx.Response[domain.LoginResponse]{
+		Body: loginResponse,
+	}
 }

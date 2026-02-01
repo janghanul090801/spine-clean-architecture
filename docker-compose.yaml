@@ -1,27 +1,40 @@
 version: "3.8"
 
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "$PORT:$PORT"
-    depends_on:
-      - postgres
+#  web:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: app
+#    restart: unless-stopped
+#    env_file: .env
+#    ports:
+#      - "$PORT:$PORT"
+#    depends_on:
+#      - postgres
 
   postgres:
     image: postgres:17
-    container_name: postgres-db
+    container_name: postgres-spine
     ports:
       - 5433:5432
     restart: always
     environment:
+      POSTGRES_DB: test
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
-      POSTGRES_DB: test
     volumes:
       - ./tmp/db-data:/var/lib/postgresql/data
+
+  postgres_test:
+    image: postgres:17
+    container_name: postgres-spine-test
+    ports:
+      - 5434:5432
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_db
+    volumes:
+      - ./tmp/db-data-test:/var/lib/postgresql/data

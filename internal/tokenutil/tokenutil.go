@@ -2,10 +2,10 @@ package tokenutil
 
 import (
 	"fmt"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {

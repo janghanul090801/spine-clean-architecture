@@ -1,15 +1,12 @@
 package route
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/controller"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/middleware"
+	"github.com/NARUBROWN/spine"
+	"github.com/NARUBROWN/spine/pkg/route"
+	"github.com/janghanul090801/spine-clean-architecture/api/controller"
+	"github.com/janghanul090801/spine-clean-architecture/interceptor"
 )
 
-func NewRefreshTokenRouter(group fiber.Router, controller *controller.RefreshTokenController) {
-
-	// protected
-	protected := group.Group("protected")
-	protected.Use(middleware.JwtMiddleware)
-	protected.Post("/", controller.RefreshToken)
+func NewRefreshTokenRouter(app spine.App) {
+	app.Route("GET", "/refresh_token", (*controller.RefreshTokenController).RefreshToken, route.WithInterceptors(&interceptor.AuthInterceptor{}))
 }

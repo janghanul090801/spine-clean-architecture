@@ -1,14 +1,12 @@
 package route
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/controller"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/middleware"
+	"github.com/NARUBROWN/spine"
+	"github.com/NARUBROWN/spine/pkg/route"
+	"github.com/janghanul090801/spine-clean-architecture/api/controller"
+	"github.com/janghanul090801/spine-clean-architecture/interceptor"
 )
 
-func NewProfileRouter(group fiber.Router, controller *controller.ProfileController) {
-	// protected
-	protected := group.Group("protected")
-	protected.Use(middleware.JwtMiddleware)
-	protected.Get("/", controller.Fetch)
+func NewProfileRouter(app spine.App) {
+	app.Route("GET", "/profile", (*controller.ProfileController).Fetch, route.WithInterceptors(&interceptor.AuthInterceptor{}))
 }

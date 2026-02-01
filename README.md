@@ -17,8 +17,8 @@ Fiber, PostgreSQL, Ent ORM, JWT 인증 미들웨어, 테스트 및 Docker를 사
 ![Go 백엔드 클린 아키텍처 다이어그램](https://github.com/amitshekhariitbhu/go-backend-clean-architecture/blob/main/assets/go-backend-arch-diagram.png?raw=true)
 
 
-- **Fiber**: Go 언어용 웹 프레임워크, Go에서 가장 빠른 HTTP 엔진인 Fasthttp를 기반으로 구축됨
-- **Ent**: Go 언어용 엔티티 프레임워크
+- **[Spine]**: 실행 흐름이 드러나는 백엔드 프레임워크(v0.3.4 기반) 
+- **Bun**
 - **testify**: Testify는 테스트를 위한 여러가지 패키지가 포함된 툴
 - **mockery**: 테스트에 사용되는 Golang용 모의 코드 자동 생성기
 - **viper**: `.env` 파일에서 구성을 로드하는 데 사용
@@ -323,3 +323,4 @@ Usecase, Repository 또는 데이터베이스의 인터페이스를 변경할 �
   }
   ```
 
+[Spine]: https://github.com/NARUBROWN/spine

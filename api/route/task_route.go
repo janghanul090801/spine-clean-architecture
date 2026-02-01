@@ -1,16 +1,13 @@
 package route
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/controller"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/api/middleware"
+	"github.com/NARUBROWN/spine"
+	"github.com/NARUBROWN/spine/pkg/route"
+	"github.com/janghanul090801/spine-clean-architecture/api/controller"
+	"github.com/janghanul090801/spine-clean-architecture/interceptor"
 )
 
-func NewTaskRouter(group fiber.Router, controller *controller.TaskController) {
-
-	// protected
-	protected := group.Group("protected")
-	protected.Use(middleware.JwtMiddleware)
-	protected.Get("/", controller.Fetch)
-	protected.Post("/", controller.Create)
+func NewTaskRouter(app spine.App) {
+	app.Route("GET", "/task", (*controller.TaskController).Fetch, route.WithInterceptors(&interceptor.AuthInterceptor{}))
+	app.Route("POST", "/task", (*controller.TaskController).Create, route.WithInterceptors(&interceptor.AuthInterceptor{}))
 }

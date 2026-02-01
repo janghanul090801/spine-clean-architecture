@@ -1,9 +1,11 @@
 package controller
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/bootstrap"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/domain"
+	"context"
+	"fmt"
+	"github.com/NARUBROWN/spine/pkg/httpx"
+	"github.com/janghanul090801/spine-clean-architecture/config"
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,28 +13,22 @@ import (
 
 type SignupController struct {
 	signupUsecase domain.SignupUsecase
-	env           *bootstrap.Env
 }
 
-func NewSignupController(usecase domain.SignupUsecase, env *bootstrap.Env) *SignupController {
+func NewSignupController(usecase domain.SignupUsecase) *SignupController {
 	return &SignupController{
 		signupUsecase: usecase,
-		env:           env,
 	}
 }
 
-func (sc *SignupController) Signup(c *fiber.Ctx) error {
-	ctx := c.Context()
-	var request domain.SignupRequest
-
-	err := c.BodyParser(&request)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(domain.ErrorResponse{Message: err.Error()})
-	}
-
-	_, err = sc.signupUsecase.GetUserByEmail(ctx, request.Email)
+func (sc *SignupController) Signup(ctx context.Context, request *domain.SignupRequest) httpx.Response[domain.SignupResponse] {
+	_, err := sc.signupUsecase.GetUserByEmail(ctx, request.Email)
 	if err == nil {
-		return c.Status(http.StatusConflict).JSON(domain.ErrorResponse{Message: "User already exists with the given email"})
+		return httpx.Response[domain.SignupResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusConflict, // User already exists with the given email
+			},
+		}
 	}
 
 	encryptedPassword, err := bcrypt.GenerateFromPassword(
@@ -40,7 +36,12 @@ func (sc *SignupController) Signup(c *fiber.Ctx) error {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		fmt.Println(err.Error())
+		return httpx.Response[domain.SignupResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
 	request.Password = string(encryptedPassword)
@@ -53,17 +54,32 @@ func (sc *SignupController) Signup(c *fiber.Ctx) error {
 
 	err = sc.signupUsecase.Create(ctx, &user)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		fmt.Println(err.Error())
+		return httpx.Response[domain.SignupResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
-	accessToken, err := sc.signupUsecase.CreateAccessToken(&user, sc.env.AccessTokenSecret, sc.env.AccessTokenExpiryHour)
+	accessToken, err := sc.signupUsecase.CreateAccessToken(&user, config.E.AccessTokenSecret, config.E.AccessTokenExpiryHour)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		fmt.Println(err.Error())
+		return httpx.Response[domain.SignupResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
-	refreshToken, err := sc.signupUsecase.CreateRefreshToken(&user, sc.env.RefreshTokenSecret, sc.env.RefreshTokenExpiryHour)
+	refreshToken, err := sc.signupUsecase.CreateRefreshToken(&user, config.E.RefreshTokenSecret, config.E.RefreshTokenExpiryHour)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(domain.ErrorResponse{Message: err.Error()})
+		fmt.Println(err.Error())
+		return httpx.Response[domain.SignupResponse]{
+			Options: httpx.ResponseOptions{
+				Status: http.StatusInternalServerError, // err.Error()
+			},
+		}
 	}
 
 	signupResponse := domain.SignupResponse{
@@ -71,5 +87,7 @@ func (sc *SignupController) Signup(c *fiber.Ctx) error {
 		RefreshToken: refreshToken,
 	}
 
-	return c.Status(http.StatusOK).JSON(signupResponse)
+	return httpx.Response[domain.SignupResponse]{
+		Body: signupResponse,
+	}
 }

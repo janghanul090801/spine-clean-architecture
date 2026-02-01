@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"github.com/janghanul090801/go-backend-clean-architecture-fiber/ent"
 	"time"
 )
 
@@ -12,16 +11,6 @@ type User struct {
 	Email     string
 	Password  string
 	CreatedAt time.Time
-}
-
-func NewUserFromEnt(entity *ent.User) *User {
-	return &User{
-		ID:        entity.ID,
-		Name:      entity.Name,
-		Email:     entity.Email,
-		Password:  entity.Password,
-		CreatedAt: entity.CreatedAt,
-	}
 }
 
 type UserRepository interface {
