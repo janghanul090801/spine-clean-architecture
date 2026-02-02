@@ -1,6 +1,6 @@
 # Go 백엔드 클린 아키텍처
 
-Fiber, PostgreSQL, Ent ORM, JWT 인증 미들웨어, 테스트 및 Docker를 사용한 Go(Golang) 백엔드 클린 아키텍처 프로젝트입니다.
+Spine, PostgreSQL, Bun ORM, JWT 인증 미들웨어, 테스트 및 Docker를 사용한 Go(Golang) 백엔드 클린 아키텍처 프로젝트입니다.
 
 ![Go 백엔드 클린 아키텍처](https://github.com/amitshekhariitbhu/go-backend-clean-architecture/blob/main/assets/go-backend-clean-architecture.png?raw=true)
 
@@ -48,10 +48,10 @@ Fiber, PostgreSQL, Ent ORM, JWT 인증 미들웨어, 테스트 및 Docker를 사
 cd your-workspace
 
 # 프로젝트를 작업 공간으로 복제
-git clone https://github.com/janghanul090801/go-backend-clean-architecture-fiber.git
+git clone https://github.com/janghanul090801/spine-clean-architecture
 
 # 프로젝트 루트 디렉토리로 이동
-cd go-backend-clean-architecture-fiber
+cd spine-clean-architecture
 ```
 
 #### Docker 없이 실행
@@ -59,7 +59,7 @@ cd go-backend-clean-architecture-fiber
 - 루트 디렉터리에 `.env.example`를 복사해 `.env` 파일을 만들고 값을 입력
 - `go`가 설치되어 있지 않으면 설치
 - `PostgreSQL`이 설치되어 있지 않으면 설치
-- `.env` 파일에서 `DB_HOST`를 `localhost`로 변경(`DB_HOST=localhost`)
+- `.env` 파일에서 `DB_HOST`를 `localhost`로 변경(`DB_HOST=localhost`), `DB_PORT`를 `5432` 또는 컴퓨터 환경에 맞춰 변경 
 - `go run cmd/main.go` 또는 `make run`를 실행
 - `http://localhost:8080`로 접속
 
@@ -75,6 +75,9 @@ cd go-backend-clean-architecture-fiber
 ```bash
 # 모든 테스트 실행
 go test ./...
+
+# 또는
+make test
 ```
 
 ### 모의 코드 생성
@@ -84,6 +87,9 @@ go test ./...
 ```bash
 # Usecase 및 Repository 에 대한 모의 코드 생성
 mockery --dir=domain --output=domain/mocks --outpkg=mocks --all
+
+# 또는
+make mock
 ```
 
 Usecase, Repository 또는 데이터베이스의 인터페이스를 변경할 때마다 해당 명령을 실행하여 테스트용 모의 코드를 다시 생성해야 합니다.
@@ -95,26 +101,38 @@ Usecase, Repository 또는 데이터베이스의 인터페이스를 변경할 �
 ├── api/
 │   ├── controller/
 │   │   ├── login_controller.go
-│   │   ├── profile_controller_test.go
 │   │   ├── profile_controller.go
+│   │   ├── profile_controller_test.go
 │   │   ├── refresh_token_controller.go
 │   │   ├── signup_controller.go
 │   │   └── task_controller.go
-│   ├── middleware/
-│   │   └── jwt_auth_middleware.go
 │   └── route/
 │       ├── login_route.go
 │       ├── profile_route.go
 │       ├── refresh_token_route.go
 │       ├── signup_route.go
 │       └── task_route.go
+├── assets/
+│   ├── button-view-api-docs.png
+│   ├── go-arch-private-api-request-flow.png
+│   ├── go-arch-public-api-request-flow.png
+│   ├── go-backend-arch-diagram.png
+│   └── go-backend-clean-architecture.png
 ├── bootstrap/
-│   ├── app.go
-│   ├── database.go
-│   └── env.go
+│   └── app.go
 ├── cmd/
 │   └── main.go
+├── config/
+│   └── env.go
 ├── domain/
+│   ├── mocks/
+│   │   ├── LoginUsecase.go
+│   │   ├── ProfileUsecase.go
+│   │   ├── RefreshTokenUsecase.go
+│   │   ├── SignupUsecase.go
+│   │   ├── TaskRepository.go
+│   │   ├── TaskUsecase.go
+│   │   └── UserRepository.go
 │   ├── domain.go
 │   ├── error_response.go
 │   ├── jwt_custom.go
@@ -124,74 +142,44 @@ Usecase, Repository 또는 데이터베이스의 인터페이스를 변경할 �
 │   ├── signup.go
 │   ├── success_response.go
 │   ├── task.go
-│   ├── user.go
-│   └── mocks/
-│       ├── LoginUsecase.go
-│       ├── ProfileUsecase.go
-│       ├── RefreshTokenUsecase.go
-│       ├── SignupUsecase.go
-│       ├── TaskRepository.go
-│       ├── TaskUsecase.go
-│       └── UserRepository.go
-├── ent/
-│   ├── client.go
-│   ├── ent.go
-│   ├── generate.go
-│   ├── mutation.go
-│   ├── runtime.go
-│   ├── task_create.go
-│   ├── task_delete.go
-│   ├── task_query.go
-│   ├── task_update.go
-│   ├── task.go
-│   ├── tx.go
-│   ├── user_create.go
-│   ├── user_delete.go
-│   ├── user_query.go
-│   ├── user_update.go
-│   ├── user.go
-│   ├── enttest/
-│   │   └── enttest.go
-│   ├── hook/
-│   │   └── hook.go
-│   ├── migrate/
-│   │   ├── migrate.go
-│   │   └── schema.go
-│   ├── predicate/
-│   │   └── predicate.go
-│   ├── runtime/
-│   │   └── runtime.go
-│   ├── schema/
-│   │   ├── task.go
-│   │   └── user.go
-│   ├── task/
-│   │   ├── task.go
-│   │   └── where.go
-│   └── user/
-│       ├── user.go
-│       └── where.go
+│   └── user.go
+├── infra/
+│   ├── database/
+│   │   └── database.go
+│   ├── migrations/
+│   │   ├── cmd/
+│   │   │   └── main.go
+│   │   ├── 00000000_init.go
+│   │   └── migrations.go
+│   ├── model/
+│   │   ├── task_model.go
+│   │   └── user_model.go
+│   └── repository/
+│       ├── task_repository.go
+│       ├── user_repository.go
+│       └── user_repository_test.go
+├── interceptor/
+│   ├── auth_interceptor.go
+│   ├── cors_interceptor.go
+│   ├── error_interceptor.go
+│   ├── logging_interceptor.go
+│   ├── rate_limiter.go
+│   ├── security_headers.go
+│   └── tx_interceptor.go
 ├── internal/
 │   ├── fakeutil/
 │   │   └── fakeutil.go
+│   ├── logger/
+│   │   └── logger.go
 │   └── tokenutil/
 │       └── tokenutil.go
-├── repository/
-│   ├── task_repository.go
-│   ├── user_repository_test.go
-│   └── user_repository.go
 ├── usecase/
 │   ├── login_usecase.go
 │   ├── profile_usecase.go
 │   ├── refresh_token_usecase.go
 │   ├── signup_usecase.go
-│   ├── task_usecase_test.go
-│   └── task_usecase.go
-├── assets/
-│   ├── button-view-api-docs.png
-│   ├── go-arch-private-api-request-flow.png
-│   ├── go-arch-public-api-request-flow.png
-│   ├── go-backend-arch-diagram.png
-│   └── go-backend-clean-architecture.png
+│   ├── task_usecase.go
+│   └── task_usecase_test.go
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yaml
