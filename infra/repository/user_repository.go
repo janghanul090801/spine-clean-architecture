@@ -27,6 +27,8 @@ func (r *userRepository) Create(c context.Context, user *domain.User) error {
 	}
 	_, err := r.db.NewInsert().Model(userModel).Exec(c)
 
+	user.ID = userModel.ID
+
 	return err
 }
 
@@ -72,7 +74,7 @@ func (r *userRepository) GetByEmail(c context.Context, email string) (*domain.Us
 
 func (r *userRepository) GetByID(c context.Context, id *domain.ID) (*domain.User, error) {
 	var userModel model.UserModel
-	err := r.db.NewSelect().Model(userModel).Where("id = ?", *id).Limit(1).Scan(c)
+	err := r.db.NewSelect().Model(&userModel).Where("id = ?", *id).Limit(1).Scan(c)
 
 	if err != nil {
 		return nil, err

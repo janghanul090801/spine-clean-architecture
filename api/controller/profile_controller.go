@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"github.com/NARUBROWN/spine/pkg/httpx"
 	"github.com/NARUBROWN/spine/pkg/spine"
 	"github.com/janghanul090801/spine-clean-architecture/domain"
@@ -28,10 +29,11 @@ func (pc *ProfileController) Fetch(ctx context.Context, spineCtx spine.Ctx) http
 		}
 	}
 
-	userID := v.(domain.ID)
+	userID := v.(*domain.ID)
 
-	profile, err := pc.profileUsecase.GetProfileByID(ctx, &userID)
+	profile, err := pc.profileUsecase.GetProfileByID(ctx, userID)
 	if err != nil {
+		fmt.Println(err.Error())
 		return httpx.Response[domain.Profile]{
 			Options: httpx.ResponseOptions{
 				Status: http.StatusInternalServerError, // err.Error()

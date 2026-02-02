@@ -26,9 +26,9 @@ func (tc *TaskController) Create(ctx context.Context, task *domain.Task, spineCt
 		return httperr.Unauthorized("unauthorized")
 	}
 
-	userID := v.(domain.ID)
+	userID := v.(*domain.ID)
 
-	task.UserID = userID
+	task.UserID = *userID
 
 	err := tc.taskUsecase.Create(ctx, task)
 	if err != nil {
@@ -52,9 +52,9 @@ func (tc *TaskController) Fetch(ctx context.Context, spineCtx spine.Ctx) httpx.R
 		}
 	}
 
-	userID := v.(domain.ID)
+	userID := v.(*domain.ID)
 
-	tasks, err := tc.taskUsecase.FetchByUserID(ctx, &userID)
+	tasks, err := tc.taskUsecase.FetchByUserID(ctx, userID)
 	if err != nil {
 		return httpx.Response[[]domain.Task]{
 			Options: httpx.ResponseOptions{

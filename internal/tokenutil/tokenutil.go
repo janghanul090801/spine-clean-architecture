@@ -72,7 +72,10 @@ func ExtractIDFromToken(requestToken string, secret string) (*domain.ID, error) 
 		return nil, fmt.Errorf("invalid token")
 	}
 
-	id := claims["id"].(domain.ID)
+	id, err := domain.StringToID(claims["id"].(string))
+	if err != nil {
+		return nil, err
+	}
 
 	return &id, nil
 }
