@@ -1,11 +1,15 @@
 package main
 
 import (
+	"os"
+	"time"
+
+	"github.com/NARUBROWN/spine"
 	"github.com/NARUBROWN/spine/pkg/boot"
 	"github.com/janghanul090801/spine-clean-architecture/api/controller"
 	"github.com/janghanul090801/spine-clean-architecture/api/route"
-	"github.com/janghanul090801/spine-clean-architecture/bootstrap"
 	"github.com/janghanul090801/spine-clean-architecture/config"
+	"github.com/janghanul090801/spine-clean-architecture/infra/database"
 	"github.com/janghanul090801/spine-clean-architecture/infra/model"
 	"github.com/janghanul090801/spine-clean-architecture/infra/repository"
 	"github.com/janghanul090801/spine-clean-architecture/interceptor"
@@ -13,17 +17,20 @@ import (
 	"github.com/janghanul090801/spine-clean-architecture/usecase"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
-	"os"
-	"time"
 )
 
 func main() {
+	config.NewEnv()
 
-	app := bootstrap.App()
+	app := spine.New()
 
-	db := app.DB
+	db, err := database.NewDB()
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
 
-	defer app.CloseDBConnection()
+	db.RegisterModel()
 
 	getLogger := logger.GetLogger()
 	getLogger.Info("Starting Spine Server")
@@ -33,7 +40,7 @@ func main() {
 		(*model.TaskModel)(nil),
 	)
 
-	app.App.Constructor(
+	app.Constructor(
 		// DB
 		func() *bun.DB { return db },
 
@@ -64,18 +71,18 @@ func main() {
 		interceptor.NewAuthInterceptor,
 	)
 
-	app.App.Interceptor(
+	app.Interceptor(
 		interceptor.NewCORSInterceptor(),
 		interceptor.NewRateLimitInterceptor(),
 		// interceptor.NewLoggingInterceptor(),
 		interceptor.NewErrorInterceptor(),
 	)
 
-	route.NewLoginRouter(app.App)
-	route.NewSignupRouter(app.App)
-	route.NewProfileRouter(app.App)
-	route.NewRefreshTokenRouter(app.App)
-	route.NewTaskRouter(app.App)
+	route.NewLoginRouter(app)
+	route.NewSignupRouter(app)
+	route.NewProfileRouter(app)
+	route.NewRefreshTokenRouter(app)
+	route.NewTaskRouter(app)
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
@@ -83,7 +90,7 @@ func main() {
 	}
 
 	getLogger.Info("Server starting", zap.String("port", port))
-	app.App.Run(boot.Options{
+	app.Run(boot.Options{
 		Address:                ":" + port,
 		EnableGracefulShutdown: true,
 		HTTP:                   &boot.HTTPOptions{},
