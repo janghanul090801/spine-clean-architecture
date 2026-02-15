@@ -221,7 +221,7 @@ make test
   - request
 
   ```
-  curl --location --request POST 'http://localhost:8080/refresh' \
+  curl --location --request POST 'http://localhost:8080/refresh_token' \
   --header 'Content-Type: application/x-www-form-urlencoded' \
   --data-urlencode 'refreshToken=refresh_token'
   ```
