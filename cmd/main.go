@@ -54,17 +54,13 @@ func main() {
 
 		// Usecase
 		usecase.NewTaskUsecase,
-		usecase.NewSignupUsecase,
-		usecase.NewLoginUsecase,
+		usecase.NewAuthUseCase,
 		usecase.NewProfileUsecase,
-		usecase.NewRefreshTokenUsecase,
 
 		// Controller
 		controller.NewTaskController,
 		controller.NewProfileController,
-		controller.NewSignupController,
-		controller.NewLoginController,
-		controller.NewRefreshTokenController,
+		controller.NewAuthController,
 
 		// Interceptor
 		interceptor.NewTxInterceptor,
@@ -78,10 +74,8 @@ func main() {
 		interceptor.NewErrorInterceptor(),
 	)
 
-	route.NewLoginRouter(app)
-	route.NewSignupRouter(app)
 	route.NewProfileRouter(app)
-	route.NewRefreshTokenRouter(app)
+	route.NewAuthRouter(app)
 	route.NewTaskRouter(app)
 
 	port := os.Getenv("SERVER_PORT")

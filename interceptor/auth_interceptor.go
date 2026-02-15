@@ -1,10 +1,11 @@
 package interceptor
 
 import (
+	"strings"
+
 	"github.com/NARUBROWN/spine/pkg/httperr"
 	"github.com/janghanul090801/spine-clean-architecture/config"
-	"github.com/janghanul090801/spine-clean-architecture/internal/tokenutil"
-	"strings"
+	"github.com/janghanul090801/spine-clean-architecture/internal/token"
 
 	"github.com/NARUBROWN/spine/core"
 	"go.uber.org/zap"
@@ -29,9 +30,9 @@ func (i *AuthInterceptor) PreHandle(ctx core.ExecutionContext, _ core.HandlerMet
 	t := strings.Split(authHeader, " ")
 	if len(t) == 2 {
 		authToken := t[1]
-		authorized, err := tokenutil.IsAuthorized(authToken, config.E.AccessTokenSecret)
+		authorized, err := token.IsAuthorized(authToken, config.E.AccessTokenSecret)
 		if authorized {
-			userID, err := tokenutil.ExtractIDFromToken(authToken, config.E.AccessTokenSecret)
+			userID, err := token.ExtractIDFromToken(authToken, config.E.AccessTokenSecret)
 			if err != nil {
 				return httperr.Unauthorized(err.Error())
 			}
