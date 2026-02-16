@@ -55,9 +55,9 @@ make test
 ├── domain/
 │   ├── mocks/
 │   │   ├── AuthUseCase.go
-│   │   ├── ProfileUsecase.go
+│   │   ├── ProfileUseCase.go
 │   │   ├── TaskRepository.go
-│   │   ├── TaskUsecase.go
+│   │   ├── TaskUseCase.go
 │   │   └── UserRepository.go
 │   ├── auth.go
 │   ├── domain.go

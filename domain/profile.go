@@ -7,6 +7,6 @@ type Profile struct {
 	Email string `json:"email"`
 }
 
-type ProfileUsecase interface {
+type ProfileUseCase interface {
 	GetProfileByID(c context.Context, userID *ID) (*Profile, error)
 }

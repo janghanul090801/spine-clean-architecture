@@ -3,17 +3,18 @@ package controller
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/NARUBROWN/spine/pkg/httpx"
 	"github.com/NARUBROWN/spine/pkg/spine"
 	"github.com/janghanul090801/spine-clean-architecture/domain"
-	"net/http"
 )
 
 type ProfileController struct {
-	profileUsecase domain.ProfileUsecase
+	profileUsecase domain.ProfileUseCase
 }
 
-func NewProfileController(usecase domain.ProfileUsecase) *ProfileController {
+func NewProfileController(usecase domain.ProfileUseCase) *ProfileController {
 	return &ProfileController{
 		profileUsecase: usecase,
 	}

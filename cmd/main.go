@@ -55,7 +55,7 @@ func main() {
 		// Usecase
 		usecase.NewTaskUseCase,
 		usecase.NewAuthUseCase,
-		usecase.NewProfileUsecase,
+		usecase.NewProfileUseCase,
 
 		// Controller
 		controller.NewTaskController,

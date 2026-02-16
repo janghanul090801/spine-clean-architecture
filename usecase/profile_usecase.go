@@ -2,23 +2,24 @@ package usecase
 
 import (
 	"context"
-	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"time"
+
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 )
 
-type profileUsecase struct {
+type profileUseCase struct {
 	userRepository domain.UserRepository
 	contextTimeout time.Duration
 }
 
-func NewProfileUsecase(userRepository domain.UserRepository, timeout time.Duration) domain.ProfileUsecase {
-	return &profileUsecase{
+func NewProfileUseCase(userRepository domain.UserRepository, timeout time.Duration) domain.ProfileUseCase {
+	return &profileUseCase{
 		userRepository: userRepository,
 		contextTimeout: timeout,
 	}
 }
 
-func (pu *profileUsecase) GetProfileByID(c context.Context, userID *domain.ID) (*domain.Profile, error) {
+func (pu *profileUseCase) GetProfileByID(c context.Context, userID *domain.ID) (*domain.Profile, error) {
 	ctx, cancel := context.WithTimeout(c, pu.contextTimeout)
 	defer cancel()
 
