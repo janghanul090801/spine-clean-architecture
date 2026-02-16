@@ -30,7 +30,7 @@ func TestFetchByUserID(t *testing.T) {
 
 		mockTaskRepository.On("FetchByUserID", mock.Anything, &userID).Return(mockListTask, nil).Once()
 
-		u := usecase.NewTaskUsecase(mockTaskRepository, time.Second*2)
+		u := usecase.NewTaskUseCase(mockTaskRepository, time.Second*2)
 
 		list, err := u.FetchByUserID(context.Background(), &userID)
 
@@ -44,7 +44,7 @@ func TestFetchByUserID(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		mockTaskRepository.On("FetchByUserID", mock.Anything, &userID).Return(nil, errors.New("unexpected")).Once()
 
-		u := usecase.NewTaskUsecase(mockTaskRepository, time.Second*2)
+		u := usecase.NewTaskUseCase(mockTaskRepository, time.Second*2)
 
 		list, err := u.FetchByUserID(context.Background(), &userID)
 

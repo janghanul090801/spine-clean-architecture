@@ -2,30 +2,43 @@ package usecase
 
 import (
 	"context"
-	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"time"
+
+	"github.com/janghanul090801/spine-clean-architecture/domain"
 )
 
-type taskUsecase struct {
+type taskUseCase struct {
 	taskRepository domain.TaskRepository
 	contextTimeout time.Duration
 }
 
-func NewTaskUsecase(taskRepository domain.TaskRepository, timeout time.Duration) domain.TaskUsecase {
-	return &taskUsecase{
+func NewTaskUseCase(taskRepository domain.TaskRepository, timeout time.Duration) domain.TaskUseCase {
+	return &taskUseCase{
 		taskRepository: taskRepository,
 		contextTimeout: timeout,
 	}
 }
 
-func (tu *taskUsecase) Create(c context.Context, task *domain.Task) error {
+func (tu *taskUseCase) Create(c context.Context, task *domain.Task, userID *domain.ID) (*domain.Task, error) {
 	ctx, cancel := context.WithTimeout(c, tu.contextTimeout)
 	defer cancel()
-	return tu.taskRepository.Create(ctx, task)
+	task.UserID = *userID
+
+	t, err := tu.taskRepository.Create(ctx, task)
+	if err != nil {
+		return nil, domain.NewInternalServerError(err)
+	}
+
+	return t, nil
 }
 
-func (tu *taskUsecase) FetchByUserID(c context.Context, userID *domain.ID) ([]*domain.Task, error) {
+func (tu *taskUseCase) FetchByUserID(c context.Context, userID *domain.ID) ([]*domain.Task, error) {
 	ctx, cancel := context.WithTimeout(c, tu.contextTimeout)
 	defer cancel()
-	return tu.taskRepository.FetchByUserID(ctx, userID)
+	tasks, err := tu.taskRepository.FetchByUserID(ctx, userID)
+	if err != nil {
+		return nil, domain.NewInternalServerError(err)
+	}
+
+	return tasks, nil
 }

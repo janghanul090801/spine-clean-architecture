@@ -17,21 +17,33 @@ type UserRepository struct {
 }
 
 // Create provides a mock function with given fields: c, user
-func (_m *UserRepository) Create(c context.Context, user *domain.User) error {
+func (_m *UserRepository) Create(c context.Context, user *domain.User) (*domain.User, error) {
 	ret := _m.Called(c, user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *domain.User) error); ok {
+	var r0 *domain.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.User) (*domain.User, error)); ok {
+		return rf(c, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.User) *domain.User); ok {
 		r0 = rf(c, user)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, *domain.User) error); ok {
+		r1 = rf(c, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Fetch provides a mock function with given fields: c

@@ -13,11 +13,11 @@ type Task struct {
 }
 
 type TaskRepository interface {
-	Create(c context.Context, task *Task) error
+	Create(c context.Context, task *Task) (*Task, error)
 	FetchByUserID(c context.Context, userID *ID) ([]*Task, error)
 }
 
-type TaskUsecase interface {
-	Create(c context.Context, task *Task) error
+type TaskUseCase interface {
+	Create(c context.Context, task *Task, userID *ID) (*Task, error)
 	FetchByUserID(c context.Context, userID *ID) ([]*Task, error)
 }

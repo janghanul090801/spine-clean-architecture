@@ -53,7 +53,7 @@ func main() {
 		repository.NewTaskRepository,
 
 		// Usecase
-		usecase.NewTaskUsecase,
+		usecase.NewTaskUseCase,
 		usecase.NewAuthUseCase,
 		usecase.NewProfileUsecase,
 

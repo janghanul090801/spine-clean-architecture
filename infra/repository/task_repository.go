@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"github.com/janghanul090801/spine-clean-architecture/infra/model"
@@ -18,7 +19,7 @@ func NewTaskRepository(db bun.IDB) domain.TaskRepository {
 	}
 }
 
-func (r *taskRepository) Create(c context.Context, task *domain.Task) error {
+func (r *taskRepository) Create(c context.Context, task *domain.Task) (*domain.Task, error) {
 
 	taskModel := &model.TaskModel{
 		ID:     uuid.New(),
@@ -27,8 +28,16 @@ func (r *taskRepository) Create(c context.Context, task *domain.Task) error {
 	}
 
 	_, err := r.db.NewInsert().Model(taskModel).Exec(c)
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return &domain.Task{
+		ID:        taskModel.ID,
+		Title:     taskModel.Title,
+		UserID:    taskModel.UserID,
+		CreatedAt: taskModel.CreatedAt,
+	}, nil
 }
 
 func (r *taskRepository) FetchByUserID(c context.Context, userID *domain.ID) ([]*domain.Task, error) {

@@ -2,24 +2,27 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"net/http"
+
 	"github.com/NARUBROWN/spine/pkg/httperr"
 	"github.com/NARUBROWN/spine/pkg/httpx"
 	"github.com/NARUBROWN/spine/pkg/spine"
 	"github.com/janghanul090801/spine-clean-architecture/domain"
-	"net/http"
 )
 
 type TaskController struct {
-	taskUsecase domain.TaskUsecase
+	taskUseCase domain.TaskUseCase
 }
 
-func NewTaskController(usecase domain.TaskUsecase) *TaskController {
+func NewTaskController(usecase domain.TaskUseCase) *TaskController {
 	return &TaskController{
-		taskUsecase: usecase,
+		taskUseCase: usecase,
 	}
 }
 
 func (tc *TaskController) Create(ctx context.Context, task *domain.Task, spineCtx spine.Ctx) error {
+	var errInfo domain.Error
 
 	v, ok := spineCtx.Get("id")
 	if !ok {
@@ -28,14 +31,14 @@ func (tc *TaskController) Create(ctx context.Context, task *domain.Task, spineCt
 
 	userID := v.(*domain.ID)
 
-	task.UserID = *userID
-
-	err := tc.taskUsecase.Create(ctx, task)
+	_, err := tc.taskUseCase.Create(ctx, task, userID)
 	if err != nil {
-		return &httperr.HTTPError{
-			Status:  http.StatusInternalServerError,
-			Message: err.Error(),
-			Cause:   err,
+		if ok := errors.As(err, &errInfo); ok {
+			return &httperr.HTTPError{
+				Status:  errInfo.StatusCode,
+				Message: err.Error(),
+				Cause:   err,
+			}
 		}
 	}
 
@@ -43,6 +46,8 @@ func (tc *TaskController) Create(ctx context.Context, task *domain.Task, spineCt
 }
 
 func (tc *TaskController) Fetch(ctx context.Context, spineCtx spine.Ctx) httpx.Response[[]domain.Task] {
+	var errInfo domain.Error
+
 	v, ok := spineCtx.Get("id")
 	if !ok {
 		return httpx.Response[[]domain.Task]{
@@ -54,12 +59,14 @@ func (tc *TaskController) Fetch(ctx context.Context, spineCtx spine.Ctx) httpx.R
 
 	userID := v.(*domain.ID)
 
-	tasks, err := tc.taskUsecase.FetchByUserID(ctx, userID)
+	tasks, err := tc.taskUseCase.FetchByUserID(ctx, userID)
 	if err != nil {
-		return httpx.Response[[]domain.Task]{
-			Options: httpx.ResponseOptions{
-				Status: http.StatusInternalServerError, // err.Error()
-			},
+		if ok := errors.As(err, &errInfo); ok {
+			return httpx.Response[[]domain.Task]{
+				Options: httpx.ResponseOptions{
+					Status: errInfo.StatusCode, // err.Error()
+				},
+			}
 		}
 	}
 

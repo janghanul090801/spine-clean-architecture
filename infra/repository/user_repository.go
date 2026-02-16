@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"github.com/janghanul090801/spine-clean-architecture/infra/model"
@@ -18,7 +19,7 @@ func NewUserRepository(db bun.IDB) domain.UserRepository {
 	}
 }
 
-func (r *userRepository) Create(c context.Context, user *domain.User) error {
+func (r *userRepository) Create(c context.Context, user *domain.User) (*domain.User, error) {
 	userModel := &model.UserModel{
 		ID:       uuid.New(),
 		Name:     user.Name,
@@ -27,9 +28,13 @@ func (r *userRepository) Create(c context.Context, user *domain.User) error {
 	}
 	_, err := r.db.NewInsert().Model(userModel).Exec(c)
 
-	user.ID = userModel.ID
-
-	return err
+	return &domain.User{
+		ID:        userModel.ID,
+		Name:      userModel.Name,
+		Email:     userModel.Email,
+		Password:  userModel.Password,
+		CreatedAt: userModel.CreatedAt,
+	}, err
 }
 
 func (r *userRepository) Fetch(c context.Context) ([]*domain.User, error) {
@@ -88,5 +93,5 @@ func (r *userRepository) GetByID(c context.Context, id *domain.ID) (*domain.User
 		CreatedAt: userModel.CreatedAt,
 	}
 
-	return user, err
+	return user, nil
 }

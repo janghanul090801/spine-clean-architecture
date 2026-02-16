@@ -23,10 +23,8 @@ type AuthResponse struct {
 }
 
 type AuthUseCase interface {
-	Create(c context.Context, name, email, password string) error
-	GetUserByEmail(c context.Context, email string) (*User, error)
-	GetUserByID(c context.Context, id *ID) (*User, error)
-	CreateAccessToken(user *User, secret string, expiry int) (accessToken string, err error)
-	CreateRefreshToken(user *User, secret string, expiry int) (refreshToken string, err error)
-	ExtractIDFromRefreshToken(requestToken string, secret string) (*ID, error)
+	Register(c context.Context, name, email, password string) (*User, error)
+	Login(c context.Context, email, password string) (*User, error)
+	CreateAccessAndRefreshToken(c context.Context, user *User) (string, string, error)
+	ExtractUserFromRefreshToken(c context.Context, requestToken string) (*User, error)
 }

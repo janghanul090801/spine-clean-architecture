@@ -3,6 +3,8 @@ package repository_test
 import (
 	"context"
 	"database/sql"
+	"testing"
+
 	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"github.com/janghanul090801/spine-clean-architecture/infra/model"
 	"github.com/janghanul090801/spine-clean-architecture/infra/repository"
@@ -10,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
-	"testing"
 
 	_ "github.com/lib/pq"
 )
@@ -37,7 +38,7 @@ func TestCreate(t *testing.T) {
 
 	repo := repository.NewUserRepository(db)
 
-	err = repo.Create(ctx, &domain.User{
+	_, err = repo.Create(ctx, &domain.User{
 		Name:     "hanul",
 		Email:    "hanul@gmail.com",
 		Password: "123456",

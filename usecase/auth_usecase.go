@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"time"
 
+	"github.com/janghanul090801/spine-clean-architecture/config"
 	"github.com/janghanul090801/spine-clean-architecture/domain"
 	"github.com/janghanul090801/spine-clean-architecture/internal/token"
 	"golang.org/x/crypto/bcrypt"
@@ -21,45 +24,78 @@ func NewAuthUseCase(userRepository domain.UserRepository, timeout time.Duration)
 	}
 }
 
-func (u *authUseCase) Create(c context.Context, name, email, password string) error {
+func (u *authUseCase) Register(c context.Context, name, email, password string) (*domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
 
-	encryptedPassword, err := bcrypt.GenerateFromPassword(
+	_, err := u.userRepository.GetByEmail(ctx, email)
+	if err == nil {
+		return nil, domain.NewBadRequestError(err)
+	}
+
+	encrypted, err := bcrypt.GenerateFromPassword(
 		[]byte(password),
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		return err
+		return nil, domain.NewBadRequestError(err)
 	}
 
-	return u.userRepository.Create(ctx, &domain.User{
+	user, err := u.userRepository.Create(ctx, &domain.User{
 		Name:     name,
 		Email:    email,
-		Password: string(encryptedPassword),
+		Password: string(encrypted),
 	})
+	if err != nil {
+		return nil, domain.NewInternalServerError(err)
+	}
+
+	return user, nil
 }
 
-func (u *authUseCase) GetUserByEmail(c context.Context, email string) (*domain.User, error) {
+func (u *authUseCase) Login(c context.Context, email, password string) (*domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
-	return u.userRepository.GetByEmail(ctx, email)
+
+	user, err := u.userRepository.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, domain.NewUnauthorizedError(err)
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
+		return nil, domain.NewBadRequestError(errors.New("invalid credentials"))
+	}
+
+	return user, nil
 }
 
-func (u *authUseCase) GetUserByID(c context.Context, id *domain.ID) (*domain.User, error) {
-	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
-	defer cancel()
-	return u.userRepository.GetByID(ctx, id)
+func (u *authUseCase) CreateAccessAndRefreshToken(c context.Context, user *domain.User) (string, string, error) {
+	access, err := token.CreateAccessToken(user, config.E.AccessTokenSecret, config.E.AccessTokenExpiryHour)
+	if err != nil {
+		return "", "", domain.NewInternalServerError(err)
+	}
+
+	refresh, err := token.CreateRefreshToken(user, config.E.RefreshTokenSecret, config.E.RefreshTokenExpiryHour)
+	if err != nil {
+		return "", "", domain.NewInternalServerError(err)
+	}
+
+	return access, refresh, nil
 }
 
-func (u *authUseCase) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
-	return token.CreateAccessToken(user, secret, expiry)
-}
+func (u *authUseCase) ExtractUserFromRefreshToken(c context.Context, requestToken string) (*domain.User, error) {
+	id, err := token.ExtractIDFromToken(requestToken, config.E.RefreshTokenSecret)
+	if err != nil {
+		return nil, domain.Error{
+			StatusCode: http.StatusBadRequest,
+			Err:        err,
+		}
+	}
 
-func (u *authUseCase) CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
-	return token.CreateRefreshToken(user, secret, expiry)
-}
+	user, err := u.userRepository.GetByID(c, id)
+	if err != nil {
+		return nil, domain.NewUnauthorizedError(err)
+	}
 
-func (u *authUseCase) ExtractIDFromRefreshToken(requestToken string, secret string) (*domain.ID, error) {
-	return token.ExtractIDFromToken(requestToken, secret)
+	return user, nil
 }
